@@ -17,6 +17,7 @@
   }
   html.gift-dialog-open { overflow: hidden; }
   html.wedding-fallback-dialog-open { overflow: hidden; }
+  html.wedding-menu-open { overflow: hidden; }
   .wedding-scroll-snap-host {
     scroll-snap-type: y proximity;
   }
@@ -32,6 +33,141 @@
     font-family: Georgia, 'Times New Roman', serif;
   }
   #banquet-ribbon-wedding-v1 * { box-sizing: border-box; }
+  #banquet-ribbon-wedding-v1 .wedding-menu-toggle {
+    position: fixed;
+    top: max(18px, env(safe-area-inset-top));
+    right: max(20px, env(safe-area-inset-right));
+    z-index: 18;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 42px;
+    padding: 8px 5px;
+    color: var(--ink);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font: 600 10px/1.2 Arial, sans-serif;
+    letter-spacing: .17em;
+    text-transform: uppercase;
+  }
+  #banquet-ribbon-wedding-v1 .wedding-menu-icon {
+    position: relative;
+    width: 23px;
+    height: 14px;
+    display: inline-block;
+  }
+  #banquet-ribbon-wedding-v1 .wedding-menu-icon::before,
+  #banquet-ribbon-wedding-v1 .wedding-menu-icon::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    width: 23px;
+    height: 1.5px;
+    background: currentColor;
+  }
+  #banquet-ribbon-wedding-v1 .wedding-menu-icon::before { top: 2px; }
+  #banquet-ribbon-wedding-v1 .wedding-menu-icon::after { bottom: 2px; width: 16px; }
+  #banquet-ribbon-wedding-v1 .wedding-menu-toggle:hover { opacity: .68; }
+  #banquet-ribbon-wedding-v1 .wedding-menu-toggle:focus-visible,
+  #banquet-ribbon-wedding-v1 .wedding-menu-close:focus-visible,
+  #banquet-ribbon-wedding-v1 .wedding-menu-link:focus-visible {
+    outline: 1.5px solid var(--ink);
+    outline-offset: 3px;
+  }
+  #banquet-ribbon-wedding-v1 .wedding-menu-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 28;
+    background: rgba(34, 42, 130, .17);
+    backdrop-filter: blur(3px);
+  }
+  #banquet-ribbon-wedding-v1 .wedding-menu-backdrop[hidden] { display: none; }
+  #banquet-ribbon-wedding-v1 .wedding-menu-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 29;
+    width: min(86vw, 350px);
+    height: 100vh;
+    height: 100dvh;
+    padding: max(28px, env(safe-area-inset-top)) max(28px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) 34px;
+    color: var(--ink);
+    background: var(--paper);
+    border-left: 1px solid var(--soft);
+    box-shadow: -18px 0 60px rgba(34, 42, 130, .10);
+    transform: translateX(105%);
+    visibility: hidden;
+    transition: transform .34s cubic-bezier(.22, 1, .36, 1), visibility .34s;
+  }
+  #banquet-ribbon-wedding-v1 .wedding-menu-drawer.is-open {
+    transform: translateX(0);
+    visibility: visible;
+  }
+  #banquet-ribbon-wedding-v1 .wedding-menu-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--soft);
+  }
+  #banquet-ribbon-wedding-v1 .wedding-menu-title {
+    margin: 0;
+    font-size: 37px;
+    font-style: italic;
+    font-weight: 400;
+    line-height: .95;
+    letter-spacing: -.035em;
+  }
+  #banquet-ribbon-wedding-v1 .wedding-menu-close {
+    width: 42px;
+    height: 42px;
+    margin: -8px -8px 0 0;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font: 300 30px/1 Arial, sans-serif;
+  }
+  #banquet-ribbon-wedding-v1 .wedding-menu-list {
+    display: grid;
+    gap: 0;
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  #banquet-ribbon-wedding-v1 .wedding-menu-link {
+    position: relative;
+    width: 100%;
+    min-height: 55px;
+    padding: 12px 8px 12px 25px;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid rgba(34, 42, 130, .13);
+    text-align: left;
+    cursor: pointer;
+    font: 400 17px/1.25 Arial, sans-serif;
+  }
+  #banquet-ribbon-wedding-v1 .wedding-menu-link::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    transform: translateY(-50%);
+  }
+  #banquet-ribbon-wedding-v1 .wedding-menu-link.is-current {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 19px;
+    font-style: italic;
+  }
+  #banquet-ribbon-wedding-v1 .wedding-menu-link.is-current::before { background: currentColor; }
   #banquet-ribbon-wedding-v1 .abstract-layout {
     display: grid;
     grid-template-columns: minmax(300px, 52%) minmax(260px, 48%);
@@ -720,6 +856,14 @@
   }
   #banquet-ribbon-wedding-v1 .mobile-next-button { display: none; }
   @media (max-width: 700px) {
+    #banquet-ribbon-wedding-v1 .wedding-menu-toggle {
+      top: max(10px, env(safe-area-inset-top));
+      right: max(16px, env(safe-area-inset-right));
+    }
+    #banquet-ribbon-wedding-v1 .wedding-menu-drawer {
+      width: min(88vw, 350px);
+      padding-left: 30px;
+    }
     #banquet-ribbon-wedding-v1 .abstract-layout { display: block; }
     #banquet-ribbon-wedding-v1 .abstract-canvas-wrap {
       height: 49vh;
@@ -895,6 +1039,7 @@
     50% { transform: translateY(4px); }
   }
   @media (prefers-reduced-motion: reduce) {
+    #banquet-ribbon-wedding-v1 .wedding-menu-drawer { transition: none; }
     #banquet-ribbon-wedding-v1 .abstract-guide span,
     #banquet-ribbon-wedding-v1 .abstract-home-button span { animation: none; }
     #banquet-ribbon-wedding-v1 .abstract-chapter { transition: none; }
@@ -915,6 +1060,26 @@
   </div>
 </noscript>
 <div id="banquet-ribbon-wedding-v1">
+  <button class="wedding-menu-toggle" type="button" aria-expanded="false" aria-controls="wedding-menu" aria-label="Abrir menú de la invitación">
+    <span>Menú</span>
+    <span class="wedding-menu-icon" aria-hidden="true"></span>
+  </button>
+  <div class="wedding-menu-backdrop" hidden></div>
+  <nav class="wedding-menu-drawer" id="wedding-menu" aria-label="Secciones de la invitación" aria-hidden="true">
+    <div class="wedding-menu-head">
+      <h2 class="wedding-menu-title">Nuestra<br>invitación</h2>
+      <button class="wedding-menu-close" type="button" aria-label="Cerrar menú">×</button>
+    </div>
+    <ol class="wedding-menu-list">
+      <li><button class="wedding-menu-link is-current" type="button" data-chapter-index="0" aria-current="page">¡Nos casamos!</button></li>
+      <li><button class="wedding-menu-link" type="button" data-chapter-index="1">¿Cuándo?</button></li>
+      <li><button class="wedding-menu-link" type="button" data-chapter-index="2">¿Dónde?</button></li>
+      <li><button class="wedding-menu-link" type="button" data-chapter-index="3">¿Cómo será el día?</button></li>
+      <li><button class="wedding-menu-link" type="button" data-chapter-index="4">Dresscode</button></li>
+      <li><button class="wedding-menu-link" type="button" data-chapter-index="5">Regalos</button></li>
+      <li><button class="wedding-menu-link" type="button" data-chapter-index="6">Confirmar</button></li>
+    </ol>
+  </nav>
   <button class="mobile-next-button" type="button" aria-label="Ir a la fecha">
     <span class="mobile-next-button-label">Continuar</span>
     <span class="mobile-next-button-arrow" aria-hidden="true">↓</span>
@@ -933,23 +1098,23 @@
     </aside>
 
     <main class="abstract-story">
-      <section class="abstract-chapter is-active">
+      <section class="abstract-chapter is-active" id="nos-casamos">
         <p class="abstract-kicker">¡Nos casamos!</p>
         <h1>Isidora <span class="abstract-amp">&amp; Benjamín</span></h1>
         <p class="abstract-copy">Queremos celebrar y compartir este día contigo.</p>
       </section>
-      <section class="abstract-chapter">
+      <section class="abstract-chapter" id="cuando">
         <p class="abstract-kicker">¿Cuándo?</p>
         <h2>Sábado<br><span class="abstract-date">28</span>de noviembre 2026</h2>
         <p class="abstract-copy abstract-time">16:30 horas</p>
       </section>
-      <section class="abstract-chapter">
+      <section class="abstract-chapter" id="donde">
         <p class="abstract-kicker">¿Dónde?</p>
         <h2>Viña<br><em>Tintomare</em></h2>
         <p class="abstract-copy">Santo Domingo, Chile.</p>
         <a class="abstract-action" href="https://www.google.com/maps/search/?api=1&amp;query=Vi%C3%B1a%20Tintomare%2C%20Santo%20Domingo%2C%20Chile" target="_blank" rel="noopener noreferrer">Ver Mapa</a>
       </section>
-      <section class="abstract-chapter abstract-program-chapter">
+      <section class="abstract-chapter abstract-program-chapter" id="programa">
         <h2 class="abstract-program-title">¿Cómo será el día?</h2>
         <ul class="abstract-list" aria-label="Programa del matrimonio">
           <li><strong>16:30</strong><span>Llegada de los invitados</span></li>
@@ -960,7 +1125,7 @@
           <li><strong>2:00</strong><span>Fin.</span></li>
         </ul>
       </section>
-      <section class="abstract-chapter abstract-dress-chapter">
+      <section class="abstract-chapter abstract-dress-chapter" id="dresscode">
         <p class="abstract-kicker">¿Cómo me tengo que vestir?</p>
         <h2>Formal</h2>
         <div class="abstract-dress-summary">
@@ -979,15 +1144,15 @@
           <button class="abstract-text-button" id="dress-details-close" type="button">← Volver</button>
         </div>
       </section>
-      <section class="abstract-chapter">
-        <p class="abstract-kicker">¿Nos acompañas?</p>
-        <h2>Confirma tu<br><em>asistencia</em></h2>
-        <button class="abstract-action" id="rsvp-open" type="button">Confirmar</button>
-      </section>
-      <section class="abstract-chapter">
+      <section class="abstract-chapter" id="regalos">
         <h2>Tu presencia<br><em>es nuestro mejor regalo.</em></h2>
         <p class="abstract-copy">Pero si quieres y puedes regalarnos algo, aquí dejamos algunas experiencias y proyectos en los que puedes aportar.</p>
         <button class="abstract-action" id="gift-open" type="button">Ver experiencias</button>
+      </section>
+      <section class="abstract-chapter" id="confirmar">
+        <p class="abstract-kicker">¿Nos acompañas?</p>
+        <h2>Confirma tu<br><em>asistencia</em></h2>
+        <button class="abstract-action" id="rsvp-open" type="button">Confirmar</button>
       </section>
     </main>
   </div>
@@ -1223,13 +1388,18 @@
   const mobileNextButton = root.querySelector('.mobile-next-button');
   const mobileNextLabel = root.querySelector('.mobile-next-button-label');
   const mobileNextArrow = root.querySelector('.mobile-next-button-arrow');
+  const menuToggle = root.querySelector('.wedding-menu-toggle');
+  const menuDrawer = root.querySelector('.wedding-menu-drawer');
+  const menuClose = root.querySelector('.wedding-menu-close');
+  const menuBackdrop = root.querySelector('.wedding-menu-backdrop');
+  const menuLinks = [...root.querySelectorAll('.wedding-menu-link')];
   const mobileNextAriaLabels = [
     'Ir a la fecha',
     'Ir al lugar',
     'Ir al programa',
     'Ir a vestimenta',
-    'Ir a confirmación de asistencia',
     'Ir a regalos',
+    'Ir a confirmación de asistencia',
     'Volver al inicio de la invitación'
   ];
   let visibleChapterIndex = 0;
@@ -1286,8 +1456,8 @@
     'Racimo de uvas dibujado en tinta azul',
     'Copa de celebración dibujada en tinta azul',
     'Lentes de sol dibujados en tinta azul',
-    'Sobre de confirmación dibujado en tinta azul',
-    'Regalo con lazo dibujado en tinta azul'
+    'Regalo con lazo dibujado en tinta azul',
+    'Sobre de confirmación dibujado en tinta azul'
   ];
   const definitions = [
     [
@@ -1423,7 +1593,7 @@
     ]
   ];
   const symbolShapes = definitions.map(sampleChain);
-  const storySymbolShapes = [1, 2, 3, 4, 6, 5].map((index) => symbolShapes[index]);
+  const storySymbolShapes = [1, 2, 3, 4, 5, 6].map((index) => symbolShapes[index]);
   let shapes = [storySymbolShapes[0], ...storySymbolShapes];
   const currentPoints = shapes[0].map((point) => ({ x: point.x, y: point.y, vx: 0, vy: 0 }));
   let targetPoints = shapes[0];
@@ -1440,9 +1610,17 @@
 
   const inkColor = getComputedStyle(root).getPropertyValue('--ink').trim() || '#222a82';
   const smoothstep = (value) => value * value * (3 - 2 * value);
-  const activate = (shapeIndex) => chapters.forEach((chapter, chapterIndex) => {
-    chapter.classList.toggle('is-active', chapterIndex === shapeIndex);
-  });
+  const activate = (shapeIndex) => {
+    chapters.forEach((chapter, chapterIndex) => {
+      chapter.classList.toggle('is-active', chapterIndex === shapeIndex);
+    });
+    menuLinks.forEach((link) => {
+      const isCurrent = Number(link.dataset.chapterIndex) === shapeIndex;
+      link.classList.toggle('is-current', isCurrent);
+      if (isCurrent) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+  };
   const rebuildIntroShape = () => {
     const sourceWidth = sourceImage.naturalWidth || 1302;
     const sourceHeight = sourceImage.naturalHeight || 1600;
@@ -1575,8 +1753,8 @@
       x: point.x + (shapes[toIndex][index].x - point.x) * easedAmount,
       y: point.y + (shapes[toIndex][index].y - point.y) * easedAmount
     }));
-    canvas.setAttribute('aria-label', shapeNames[fromIndex]);
     const activeChapterIndex = Math.min(chapters.length - 1, Math.round(rawPosition));
+    canvas.setAttribute('aria-label', shapeNames[activeChapterIndex]);
     const isLastChapter = activeChapterIndex === chapters.length - 1;
     visibleChapterIndex = activeChapterIndex;
     activate(activeChapterIndex);
@@ -1638,6 +1816,25 @@
     requestAnimationFrame(step);
   };
 
+  const openMenu = () => {
+    if (!menuToggle || !menuDrawer || !menuBackdrop || !menuClose) return;
+    menuToggle.setAttribute('aria-expanded', 'true');
+    menuDrawer.setAttribute('aria-hidden', 'false');
+    menuDrawer.classList.add('is-open');
+    menuBackdrop.hidden = false;
+    document.documentElement.classList.add('wedding-menu-open');
+    menuClose.focus();
+  };
+  const closeMenu = (restoreFocus = true) => {
+    if (!menuToggle || !menuDrawer || !menuBackdrop) return;
+    menuToggle.setAttribute('aria-expanded', 'false');
+    menuDrawer.setAttribute('aria-hidden', 'true');
+    menuDrawer.classList.remove('is-open');
+    menuBackdrop.hidden = true;
+    document.documentElement.classList.remove('wedding-menu-open');
+    if (restoreFocus) menuToggle.focus();
+  };
+
   resize();
   updateScroll();
   scrollHost.addEventListener('scroll', handleScroll, { passive: true });
@@ -1652,6 +1849,19 @@
   if (desktopHomeButton) {
     desktopHomeButton.addEventListener('click', () => navigateToChapter(chapters[0]));
   }
+  if (menuToggle) menuToggle.addEventListener('click', openMenu);
+  if (menuClose) menuClose.addEventListener('click', () => closeMenu());
+  if (menuBackdrop) menuBackdrop.addEventListener('click', () => closeMenu());
+  menuLinks.forEach((link) => {
+    link.addEventListener('click', () => {
+      const targetIndex = Number(link.dataset.chapterIndex);
+      closeMenu(false);
+      if (chapters[targetIndex]) navigateToChapter(chapters[targetIndex]);
+    });
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && menuDrawer && menuDrawer.classList.contains('is-open')) closeMenu();
+  });
   if ('ResizeObserver' in window) new window.ResizeObserver(resize).observe(canvas.parentElement);
 })();
 </script>
