@@ -463,6 +463,8 @@
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
+    overflow-anchor: none;
+    scroll-behavior: auto;
     padding: 30px clamp(24px, 6vw, 52px) 22px;
   }
   #banquet-ribbon-wedding-v1 .gift-close {
@@ -724,6 +726,8 @@
     max-height: min(88vh, 760px);
     overflow-y: auto;
     overscroll-behavior: contain;
+    overflow-anchor: none;
+    scroll-behavior: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--ink) transparent;
     scrollbar-gutter: stable;
@@ -867,7 +871,7 @@
     padding: 9px 16px;
     color: var(--ink);
     background: var(--paper);
-    border: 1.5px solid var(--ink);
+    border: 0;
     border-radius: 999px;
     font: 600 12px/1.2 Arial, sans-serif;
     text-decoration: none;
@@ -877,6 +881,32 @@
   #banquet-ribbon-wedding-v1 .inspo-back:focus-visible {
     outline: 1.5px solid var(--ink);
     outline-offset: 4px;
+    border-radius: 4px;
+  }
+  #banquet-ribbon-wedding-v1 .inspo-close-button {
+    position: absolute;
+    z-index: 2;
+    top: 18px;
+    right: 22px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    color: var(--ink);
+    background: transparent;
+    border: 0;
+    font: 300 30px/1 Arial, sans-serif;
+    cursor: pointer;
+    transition: opacity 180ms ease, transform 180ms ease;
+  }
+
+  #banquet-ribbon-wedding-v1 .inspo-close-button:hover {
+    opacity: 0.68;
+    transform: scale(1.04);
+  }
+
+  #banquet-ribbon-wedding-v1 .inspo-close-button:focus-visible {
+    outline: 1.5px solid var(--ink);
+    outline-offset: 3px;
     border-radius: 4px;
   }
   #banquet-ribbon-wedding-v1 .inspo-return-overlay {
@@ -1042,6 +1072,7 @@
       height: 47vh;
       height: 47svh;
       width: 90%;
+      transform: translateY(3svh);
     }
     #banquet-ribbon-wedding-v1 #symbolic-line-canvas {
       -webkit-mask-image: linear-gradient(
@@ -1066,8 +1097,8 @@
     #banquet-ribbon-wedding-v1 .abstract-chapter {
       min-height: 100vh;
       min-height: 100svh;
-      padding: 52vh 28px 7vh;
-      padding: 52svh 28px 7svh;
+      padding: 55vh 28px 7vh;
+      padding: 55svh 28px 7svh;
       justify-content: flex-start;
       opacity: 0;
     }
@@ -1140,14 +1171,14 @@
     #banquet-ribbon-wedding-v1 .gift-slide-copy { min-height: 42px; }
     #banquet-ribbon-wedding-v1 .abstract-program-title { font-size: clamp(32px, 9vw, 40px); }
     #banquet-ribbon-wedding-v1 .abstract-program-chapter {
-      padding-top: 47vh;
-      padding-top: 47svh;
+      padding-top: 50vh;
+      padding-top: 50svh;
     }
     #banquet-ribbon-wedding-v1 .abstract-program-title + .abstract-list { margin-top: 14px; }
     #banquet-ribbon-wedding-v1 .abstract-program-title + .abstract-list li { padding: 6px 0; }
     #banquet-ribbon-wedding-v1 .abstract-dress-chapter {
-      padding-top: 42vh;
-      padding-top: 42svh;
+      padding-top: 45vh;
+      padding-top: 45svh;
       padding-bottom: 6vh;
       padding-bottom: 6svh;
     }
@@ -1179,6 +1210,7 @@
       max-width: none;
       height: 100vh;
       height: 100svh;
+      height: 100dvh;
       max-height: none;
       border: 0;
       border-radius: 0;
@@ -1190,6 +1222,10 @@
     #banquet-ribbon-wedding-v1 .inspo-back {
       top: max(10px, env(safe-area-inset-top));
       left: 22px;
+    }
+    #banquet-ribbon-wedding-v1 .inspo-close-button {
+      top: max(10px, env(safe-area-inset-top));
+      right: 18px;
     }
     #banquet-ribbon-wedding-v1 .inspo-title { font-size: clamp(20px, 6.2vw, 25px); }
     #banquet-ribbon-wedding-v1 .inspo-carousel { margin-top: 18px; }
@@ -1502,6 +1538,7 @@
 
     <div class="inspo-dialog-inner">
       <button class="inspo-back inspo-close" type="button">← Volver a la invitación</button>
+      <button class="inspo-close inspo-close-button" type="button" aria-label="Cerrar inspiración">×</button>
       <p class="abstract-kicker">Inspiración</p>
       <h3 class="inspo-title" id="inspo-title">Cuánto estilo en el pasado</h3>
       <div class="inspo-carousel" aria-roledescription="carrusel" aria-label="Inspiración de vestimenta">
@@ -1995,17 +2032,20 @@
     else scrollHost.scrollTop = top;
   };
   const navigateToChapter = (chapter) => {
+    if (!(chapter instanceof HTMLElement)) return;
     const start = currentScrollPosition();
     const destination = start + chapter.getBoundingClientRect().top;
-    if (reducedMotion) {
+    const isMobileNavigation = mobileLayout && mobileLayout.matches;
+    snapHost.classList.remove('wedding-scroll-snap-host');
+    if (reducedMotion || isMobileNavigation) {
       setScrollPosition(destination);
       updateScroll();
+      window.requestAnimationFrame(() => snapHost.classList.add('wedding-scroll-snap-host'));
       return;
     }
     const duration = 850;
     let startedAt;
     if (mobileNextButton) mobileNextButton.disabled = true;
-    snapHost.classList.remove('wedding-scroll-snap-host');
     const step = (timestamp) => {
       if (startedAt === undefined) startedAt = timestamp;
       const elapsed = Math.max(0, timestamp - startedAt);
@@ -2238,13 +2278,39 @@
     status.textContent = message;
   };
 
+  let focusedFieldTimer = 0;
+  let focusedFieldFrame = 0;
   const keepFocusedFieldVisible = (field) => {
     if (!(field instanceof HTMLElement) || !field.matches('input, textarea, select')) return;
-    window.requestAnimationFrame(() => field.scrollIntoView({ block: 'center', inline: 'nearest' }));
+    const container = field.closest('.rsvp-dialog-inner');
+    if (!container) return;
+    window.cancelAnimationFrame(focusedFieldFrame);
+    focusedFieldFrame = window.requestAnimationFrame(() => {
+      focusedFieldFrame = 0;
+      const viewport = window.visualViewport;
+      const visibleTop = viewport ? viewport.offsetTop : 0;
+      const visibleBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+      const rect = field.getBoundingClientRect();
+      const margin = 24;
+      const bottomDelta = rect.bottom - (visibleBottom - margin);
+      const topDelta = rect.top - (visibleTop + margin);
+      if (bottomDelta > 0) container.scrollTop += bottomDelta;
+      else if (topDelta < 0) container.scrollTop += topDelta;
+    });
   };
-  form.addEventListener('focusin', (event) => keepFocusedFieldVisible(event.target));
+  const scheduleFocusedFieldVisibility = (field, delay = 0) => {
+    window.clearTimeout(focusedFieldTimer);
+    if (delay > 0) {
+      focusedFieldTimer = window.setTimeout(() => keepFocusedFieldVisible(field), delay);
+      return;
+    }
+    keepFocusedFieldVisible(field);
+  };
+  form.addEventListener('focusin', (event) => scheduleFocusedFieldVisibility(event.target));
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', () => keepFocusedFieldVisible(document.activeElement));
+    window.visualViewport.addEventListener('resize', () => {
+      scheduleFocusedFieldVisibility(document.activeElement, 120);
+    });
   }
 
   window.__weddingRsvpCallback = (result) => {
@@ -2434,13 +2500,39 @@
     button.addEventListener('click', () => showMessageView(button.dataset.giftName));
   });
   backButton.addEventListener('click', showCarouselView);
+  let focusedFieldTimer = 0;
+  let focusedFieldFrame = 0;
   const keepFocusedFieldVisible = (field) => {
     if (!(field instanceof HTMLElement) || !field.matches('input, textarea, select')) return;
-    window.requestAnimationFrame(() => field.scrollIntoView({ block: 'center', inline: 'nearest' }));
+    const container = field.closest('.gift-dialog-inner');
+    if (!container) return;
+    window.cancelAnimationFrame(focusedFieldFrame);
+    focusedFieldFrame = window.requestAnimationFrame(() => {
+      focusedFieldFrame = 0;
+      const viewport = window.visualViewport;
+      const visibleTop = viewport ? viewport.offsetTop : 0;
+      const visibleBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+      const rect = field.getBoundingClientRect();
+      const margin = 24;
+      const bottomDelta = rect.bottom - (visibleBottom - margin);
+      const topDelta = rect.top - (visibleTop + margin);
+      if (bottomDelta > 0) container.scrollTop += bottomDelta;
+      else if (topDelta < 0) container.scrollTop += topDelta;
+    });
   };
-  form.addEventListener('focusin', (event) => keepFocusedFieldVisible(event.target));
+  const scheduleFocusedFieldVisibility = (field, delay = 0) => {
+    window.clearTimeout(focusedFieldTimer);
+    if (delay > 0) {
+      focusedFieldTimer = window.setTimeout(() => keepFocusedFieldVisible(field), delay);
+      return;
+    }
+    keepFocusedFieldVisible(field);
+  };
+  form.addEventListener('focusin', (event) => scheduleFocusedFieldVisibility(event.target));
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', () => keepFocusedFieldVisible(document.activeElement));
+    window.visualViewport.addEventListener('resize', () => {
+      scheduleFocusedFieldVisibility(document.activeElement, 120);
+    });
   }
 
   window.__weddingGiftCallback = (result) => {
