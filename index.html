@@ -69,6 +69,86 @@
   #banquet-ribbon-wedding-v1 .wedding-menu-icon::before { top: 2px; }
   #banquet-ribbon-wedding-v1 .wedding-menu-icon::after { bottom: 2px; width: 16px; }
   #banquet-ribbon-wedding-v1 .wedding-menu-toggle:hover { opacity: .68; }
+  #banquet-ribbon-wedding-v1 .wedding-side-pagination {
+    position: fixed;
+    top: 50%;
+    right: max(18px, env(safe-area-inset-right));
+    z-index: 16;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    transform: translateY(-50%);
+  }
+  #banquet-ribbon-wedding-v1 .wedding-side-pagination-button {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    color: var(--ink);
+    background: transparent;
+    border: 0;
+    border-radius: 50%;
+    opacity: .42;
+    cursor: pointer;
+  }
+  #banquet-ribbon-wedding-v1 .wedding-side-pagination-button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width .2s ease, height .2s ease, background .2s ease;
+  }
+  #banquet-ribbon-wedding-v1 .wedding-side-pagination-button:hover,
+  #banquet-ribbon-wedding-v1 .wedding-side-pagination-button:focus-visible,
+  #banquet-ribbon-wedding-v1 .wedding-side-pagination-button.is-current { opacity: 1; }
+  #banquet-ribbon-wedding-v1 .wedding-side-pagination-button.is-current::before {
+    width: 8px;
+    height: 8px;
+    background: currentColor;
+  }
+  #banquet-ribbon-wedding-v1 .wedding-side-pagination-button::after {
+    content: attr(aria-label);
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 10px);
+    padding: 5px 8px;
+    color: var(--ink);
+    background: rgba(243, 235, 217, .96);
+    border: 1px solid var(--soft);
+    border-radius: 999px;
+    font: 600 9px/1 Arial, sans-serif;
+    letter-spacing: .08em;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-50%) translateX(3px);
+    transition: opacity .18s ease, transform .18s ease;
+    white-space: nowrap;
+  }
+  #banquet-ribbon-wedding-v1 .wedding-side-pagination-button:hover::after,
+  #banquet-ribbon-wedding-v1 .wedding-side-pagination-button:focus-visible::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+  #banquet-ribbon-wedding-v1 .wedding-side-pagination-button:focus-visible {
+    outline: 1.5px solid var(--ink);
+    outline-offset: 2px;
+  }
+  @media (max-width: 700px) {
+    #banquet-ribbon-wedding-v1 .wedding-side-pagination {
+      right: max(7px, env(safe-area-inset-right));
+      gap: 3px;
+    }
+    #banquet-ribbon-wedding-v1 .wedding-side-pagination-button {
+      width: 15px;
+      height: 15px;
+    }
+    #banquet-ribbon-wedding-v1 .wedding-side-pagination-button::after { display: none; }
+  }
   #banquet-ribbon-wedding-v1 .wedding-menu-toggle:focus-visible,
   #banquet-ribbon-wedding-v1 .wedding-menu-close:focus-visible,
   #banquet-ribbon-wedding-v1 .wedding-menu-link:focus-visible {
@@ -1178,6 +1258,15 @@
     <span class="mobile-next-button-label">Continuar</span>
     <span class="mobile-next-button-arrow" aria-hidden="true">↓</span>
   </button>
+  <nav class="wedding-side-pagination" aria-label="Progreso de la invitación">
+    <button class="wedding-side-pagination-button is-current" type="button" data-chapter-index="0" aria-label="Inicio" aria-current="true" title="Inicio"></button>
+    <button class="wedding-side-pagination-button" type="button" data-chapter-index="1" aria-label="Fecha" title="Fecha"></button>
+    <button class="wedding-side-pagination-button" type="button" data-chapter-index="2" aria-label="Lugar" title="Lugar"></button>
+    <button class="wedding-side-pagination-button" type="button" data-chapter-index="3" aria-label="Programa" title="Programa"></button>
+    <button class="wedding-side-pagination-button" type="button" data-chapter-index="4" aria-label="Vestimenta" title="Vestimenta"></button>
+    <button class="wedding-side-pagination-button" type="button" data-chapter-index="5" aria-label="Regalos" title="Regalos"></button>
+    <button class="wedding-side-pagination-button" type="button" data-chapter-index="6" aria-label="Confirmar" title="Confirmar"></button>
+  </nav>
   <div class="abstract-layout">
     <aside class="abstract-canvas-wrap" aria-label="La cinta de la mesa se transforma en los símbolos de la historia">
       <div class="banquet-visual">
@@ -1505,6 +1594,7 @@
   const menuClose = root.querySelector('.wedding-menu-close');
   const menuBackdrop = root.querySelector('.wedding-menu-backdrop');
   const menuLinks = [...root.querySelectorAll('.wedding-menu-link')];
+  const sidePaginationButtons = [...root.querySelectorAll('.wedding-side-pagination-button')];
   const mobileNextAriaLabels = [
     'Ir a la fecha',
     'Ir al lugar',
@@ -1731,6 +1821,12 @@
       link.classList.toggle('is-current', isCurrent);
       if (isCurrent) link.setAttribute('aria-current', 'page');
       else link.removeAttribute('aria-current');
+    sidePaginationButtons.forEach((button) => {
+      const isCurrent = Number(button.dataset.chapterIndex) === shapeIndex;
+      button.classList.toggle('is-current', isCurrent);
+      if (isCurrent) button.setAttribute('aria-current', 'true');
+      else button.removeAttribute('aria-current');
+    });
     });
   };
   const rebuildIntroShape = () => {
@@ -1968,6 +2064,12 @@
     link.addEventListener('click', () => {
       const targetIndex = Number(link.dataset.chapterIndex);
       closeMenu(false);
+      if (chapters[targetIndex]) navigateToChapter(chapters[targetIndex]);
+    });
+  });
+  sidePaginationButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const targetIndex = Number(button.dataset.chapterIndex);
       if (chapters[targetIndex]) navigateToChapter(chapters[targetIndex]);
     });
   });
