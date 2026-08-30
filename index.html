@@ -201,13 +201,12 @@
   #banquet-ribbon-wedding-v1 .banquet-source {
     object-fit: contain;
     opacity: 1;
-    will-change: opacity, transform;
-    transition: opacity .14s linear, transform .14s cubic-bezier(.7, 0, 1, 1);
+    transition: opacity .18s linear, transform .35s ease;
   }
   #banquet-ribbon-wedding-v1 .banquet-source:not(.banquet-source-local) { display: none; }
   #banquet-ribbon-wedding-v1 .banquet-visual.is-leaving .banquet-source {
     opacity: var(--image-opacity, 0);
-    transform: translate(calc(var(--image-progress, 0) * 8%), calc(var(--image-progress, 0) * -8%)) scale(calc(1 + var(--image-progress, 0) * .015));
+    transform: scale(calc(1 + var(--image-progress, 0) * .015));
   }
   #banquet-ribbon-wedding-v1 #symbolic-line-canvas { z-index: 2; }
   #banquet-ribbon-wedding-v1 .abstract-guide {
