@@ -1525,20 +1525,20 @@
           <input type="hidden" name="experiencia" value="">
           <label class="rsvp-field">
             <span class="rsvp-label">Tu nombre</span>
-            <input class="rsvp-input" name="nombre" autocomplete="name" required>
+            <input class="rsvp-input" name="nombre" autocomplete="name" maxlength="160" required>
           </label>
           <label class="rsvp-field">
             <span class="rsvp-label">Mensaje para los novios</span>
-            <textarea class="rsvp-textarea" name="mensaje" required></textarea>
+            <textarea class="rsvp-textarea" name="mensaje" maxlength="1000" required></textarea>
           </label>
           <p class="gift-message-status" role="status" aria-live="polite"></p>
           <button class="abstract-action gift-message-submit" type="submit">Guardar mensaje y continuar</button>
         </form>
       </div>
       <div class="gift-success" hidden>
-        <h3>¡Gracias por tu mensaje!</h3>
+        <h3 tabindex="-1">¡Gracias por tu mensaje!</h3>
         <p>¡Gracias! Tu mensaje quedó guardado. Ahora puedes continuar con tu aporte.</p>
-        <a class="abstract-action gift-payment-link" href="https://link.mercadopago.cl/benjaeisi" target="_blank" rel="noopener noreferrer">Continuar a Mercado Pago</a>
+        <a class="abstract-action gift-payment-link" href="https://link.mercadopago.cl/benjaeisi" rel="noopener noreferrer">Continuar a Mercado Pago</a>
       </div>
     </div>
   </dialog>
@@ -2415,6 +2415,9 @@
   let pendingRequestId = '';
   let responseTimer = 0;
   let responseScript = null;
+  let submittedPayload = '';
+  let responseController = null;
+  let hasOpened = false;
 
   const prepareGiftDrawing = () => {
     slides.forEach((slide) => {
@@ -2446,9 +2449,12 @@
   };
   const showGiftError = (message) => {
     window.clearTimeout(responseTimer);
+    if (responseController) responseController.abort();
+    responseController = null;
     clearResponseScript();
     setPending(false);
     messageStatus.textContent = message;
+    messageStatus.scrollIntoView({ block: 'nearest' });
   };
   const showCarouselView = () => {
     carouselView.hidden = false;
@@ -2487,16 +2493,18 @@
   };
 
   openButton.addEventListener('click', () => {
-    carouselStatus.textContent = '';
-    form.reset();
-    requestField.value = '';
-    pendingRequestId = '';
-    setPending(false);
-    showCarouselView();
+    if (!hasOpened) {
+      hasOpened = true;
+      carouselStatus.textContent = '';
+      form.reset();
+      requestField.value = '';
+      setPending(false);
+      showCarouselView();
+      showSlide(0);
+    }
     document.documentElement.classList.add('gift-dialog-open');
     window.weddingDialog.open(dialog);
     dialogInner.scrollTop = 0;
-    showSlide(0);
   });
   dialog.addEventListener('close', () => document.documentElement.classList.remove('gift-dialog-open'));
   closeButton.addEventListener('click', () => window.weddingDialog.close(dialog));
@@ -2550,10 +2558,10 @@
   window.__weddingGiftCallback = (result) => {
     if (!pendingRequestId) return;
     if (!result || result.type !== 'wedding-gift' || result.requestId !== pendingRequestId) {
-      showGiftError('No pudimos confirmar el guardado. Intenta nuevamente.');
       return;
     }
     window.clearTimeout(responseTimer);
+    responseController = null;
     clearResponseScript();
     if (!result.ok) {
       showGiftError(result.message || 'No pudimos guardar tu mensaje.');
@@ -2563,8 +2571,18 @@
     setPending(false);
     messageView.hidden = true;
     successView.hidden = false;
+    dialogInner.scrollTop = 0;
+    if (dialog.open) successView.querySelector('h3').focus();
   };
-  form.addEventListener('submit', (event) => {
+  const sendWithCallback = (endpoint, query) => {
+    query.set('callback', '__weddingGiftCallback');
+    clearResponseScript();
+    responseScript = document.createElement('script');
+    responseScript.src = `${endpoint}?${query.toString()}`;
+    responseScript.onerror = () => showGiftError('No pudimos conectar con Google. Prueba abrir el enlace en Safari o Chrome y reintenta.');
+    document.head.appendChild(responseScript);
+  };
+  form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!form.reportValidity()) return;
     const endpoint = form.dataset.endpoint.trim();
@@ -2572,24 +2590,54 @@
       showGiftError('Falta conectar el formulario de regalos a Apps Script.');
       return;
     }
+    if (submitButton.disabled) return;
+    const payload = JSON.stringify([experienceField.value, form.elements.nombre.value.trim(), form.elements.mensaje.value.trim()]);
+    if (!form.elements.nombre.value.trim() || !form.elements.mensaje.value.trim()) {
+      showGiftError('Escribe tu nombre y un mensaje para continuar.');
+      return;
+    }
+    if (payload !== submittedPayload) requestField.value = '';
+    submittedPayload = payload;
     pendingRequestId = requestField.value || createRequestId();
     requestField.value = pendingRequestId;
     messageStatus.textContent = 'Guardando tu mensaje…';
     setPending(true);
     responseTimer = window.setTimeout(() => {
       showGiftError('No pudimos confirmar el guardado. Intenta nuevamente.');
-    }, 15000);
+    }, 45000);
     const query = new URLSearchParams(new FormData(form));
     query.set('_cb', Date.now().toString());
     query.set('formType', 'gift');
-    query.set('callback', '__weddingGiftCallback');
-    clearResponseScript();
-    responseScript = document.createElement('script');
-    responseScript.src = `${endpoint}?${query.toString()}`;
-    responseScript.onerror = () => showGiftError('No pudimos confirmar el guardado. Intenta nuevamente.');
-    document.head.appendChild(responseScript);
+    if (location.protocol === 'file:') {
+      sendWithCallback(endpoint, query);
+      return;
+    }
+    const controller = new AbortController();
+    responseController = controller;
+    try {
+      const response = await fetch('/api/regalos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(new FormData(form))),
+        signal: controller.signal
+      });
+      if ([404, 405, 501].includes(response.status)) {
+        responseController = null;
+        sendWithCallback(endpoint, query);
+        return;
+      }
+      const result = await response.json();
+      if (result?.type !== 'wedding-gift' || result.requestId !== pendingRequestId || typeof result.ok !== 'boolean') {
+        throw new Error('Respuesta sin confirmación');
+      }
+      window.__weddingGiftCallback(result);
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      showGiftError('No pudimos conectar para guardar tu mensaje. Revisa tu conexión y reintenta.');
+    }
   });
   viewport.addEventListener('pointerdown', (event) => { pointerStart = event.clientX; });
+  viewport.addEventListener('pointercancel', () => { pointerStart = null; });
   viewport.addEventListener('pointerup', (event) => {
     if (pointerStart === null) return;
     const distance = event.clientX - pointerStart;
