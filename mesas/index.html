@@ -464,7 +464,9 @@ function search(editing=true){
       const context=document.createElement('small');
       const place=guest.table===null?'Mesa por definir':'Mesa '+guest.table;
       const aliasText=guest.aliases.join(' · ');
-      context.textContent=overlaps||nameCounts.get(guest.key)>1?[aliasText,place,guest.group!==guest.name&&!aliasText?guest.group:''].filter(Boolean).join(' · '):aliasText;
+      const sameName=nameCounts.get(guest.key)>1;
+      const groupHint=sameName && guest.group!==guest.name && !aliasText ? guest.group : '';
+      context.textContent=overlaps||sameName?[aliasText,place,groupHint].filter(Boolean).join(' · '):aliasText;
       button.append(context);
     }
     button.addEventListener('click',()=>choose(guest)); row.append(button); matches.append(row);
